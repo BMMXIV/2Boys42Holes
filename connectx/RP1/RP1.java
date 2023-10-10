@@ -12,11 +12,7 @@ import java.util.concurrent.TimeoutException;
 import javax.swing.text.Position;
 
 /**
- * Software player only a bit smarter than random.
- * <p>
- * It can detect a single-move win or loss. In all the other cases behaves
- * randomly.
- * </p>
+ * 
  */
 public class RP1 implements CXPlayer {
 	private Random rand;
@@ -48,9 +44,8 @@ public class RP1 implements CXPlayer {
 	/**
 	 * Selects a free colum on game board.
 	 * <p>
-	 * Selects a winning column (if any), otherwise selects a column (if any) 
-	 * that prevents the adversary to win with his next move. If both previous
-	 * cases do not apply, selects a random column.
+	 * Selects a winning column (if any), otherwise selects column with best score 
+	 * If there's a timeout exception, selects a random column.
 	 * </p>
 	 */
 	public int selectColumn(CXBoard B) {
@@ -83,29 +78,26 @@ public class RP1 implements CXPlayer {
 		Integer[] newScore;
 		Integer[] eval = {-1, bestScore};	//eval[0] = column to play, eval[1] = best score now
 
+		//we know from the recursive call that the game is either drawn or still open
+		//and if it's the first call of evaluateColumns and not a recursive one game is open for sure
+		
+		//we check if it's a draw
 		if (B.gameState() == draw)			//game already ended, it's a draw
 		{
 			eval[1] = 0;
 			return eval;
 		}
-		if (B.gameState() == myWin)			//game already ended, it's a win
-		{
-			eval[1] = (M*N + 1 - B.numOfMarkedCells())/2;;
-			return eval;
-		}
-		if (B.gameState() == yourWin)		//game already ended, it's a loss
-		{
-			eval[1] = -(M*N + 1 - B.numOfMarkedCells())/2;;
-			return eval;
-		}
+		//game is not drawn, so it must be open
 
 		//game is still open
 
-		int col = singleMoveWin(B, L);
-		if (col != -1)
+		//check if there's a move to win immediately
+		Integer[] col = {-1, bestScore};
+		col = singleMoveWin(B, L);
+		if (col[0] != -1)
 		{
-			eval[0] = col;
-			eval[1] = (M*N + 1 - B.numOfMarkedCells())/2;
+			eval[0] = col[0];
+			eval[1] = col[1];
 			return eval;
 		}
 
@@ -116,6 +108,9 @@ public class RP1 implements CXPlayer {
 		for (int i : L)
 		{
 			checktime(); // Check timeout at every iteration
+
+			//after this move game is either still open or a draw
+			//because there was no single move winning
 			B.markColumn(i);
       		
 			newScore = evaluateColumns(B, B.getAvailableColumns());
@@ -137,15 +132,22 @@ public class RP1 implements CXPlayer {
 	 *
 	 * Returns the winning column if there is one, otherwise -1
 	 */	
-	private int singleMoveWin(CXBoard B, Integer[] L) throws TimeoutException {
-		for(int i : L) {
-				checktime(); // Check timeout at every iteration
-		  CXGameState state = B.markColumn(i);
-		  if (state == myWin)
-			return i; // Winning column found: return immediately
-		  B.unmarkColumn();
+	private Integer[] singleMoveWin(CXBoard B, Integer[] L) throws TimeoutException {
+		Integer[] eval = {-1, 0};
+		for(int i : L)
+		{
+			checktime(); // Check timeout at every iteration
+			CXGameState state = B.markColumn(i);
+			if (state == myWin || state == yourWin)
+			{
+				eval[0] = i;
+				eval[1] = (M*N + 1 - B.numOfMarkedCells())/2;
+				return eval; // Winning column found: return immediately
+			}
+			
+			B.unmarkColumn();
 		}
-			return -1;
+		return eval;
 	}
 
 	public String playerName() {
