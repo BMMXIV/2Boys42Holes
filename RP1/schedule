@@ -1,0 +1,5 @@
+1.  fix basic RP1
+2.  alpha beta pruning
+2b. altre ottimizzazioni
+3.  euristica (profondità prefissata)
+4.  profondità di visita in base al tempo
