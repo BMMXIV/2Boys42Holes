@@ -142,6 +142,7 @@ public class RP1 implements CXPlayer {
 			{
 				eval[0] = i;
 				eval[1] = (M*N + 1 - B.numOfMarkedCells())/2;
+				B.unmarkColumn();
 				return eval; // Winning column found: return immediately
 			}
 			
