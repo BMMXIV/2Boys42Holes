@@ -92,12 +92,9 @@ public class RP1 implements CXPlayer {
 		//game is still open
 
 		//check if there's a move to win immediately
-		Integer[] col = {-1, bestScore};
-		col = singleMoveWin(B, L);
-		if (col[0] != -1)
+		eval = singleMoveWin(B, L);
+		if (eval[0] != -1)
 		{
-			eval[0] = col[0];
-			eval[1] = col[1];
 			return eval;
 		}
 
@@ -133,7 +130,7 @@ public class RP1 implements CXPlayer {
 	 * Returns the winning column if there is one, otherwise -1
 	 */	
 	private Integer[] singleMoveWin(CXBoard B, Integer[] L) throws TimeoutException {
-		Integer[] eval = {-1, 0};
+		Integer[] eval = {-1, -M*N};
 		for(int i : L)
 		{
 			checktime(); // Check timeout at every iteration
