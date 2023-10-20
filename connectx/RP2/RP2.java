@@ -67,10 +67,10 @@ public class RP2 implements CXPlayer {
 
 		try {
 			//score[0] = column to play, score[1] = evaluation
-			evaluateColumns(B, L);
+			score = evaluateColumns(B, L);
 			return score.column;
 		} catch (TimeoutException e) {
-			System.err.println("Timeout!!! Random column selected");
+			System.err.println("Timeout");
 			return score.column;
 		}
 	}
@@ -82,6 +82,7 @@ public class RP2 implements CXPlayer {
 
     private Score evaluateColumns(CXBoard B, Integer[] L) throws TimeoutException {
         Score eval = new Score();
+        Score tmp = new Score();
 
 		if (B.gameState() == draw) {
             eval.val = 0;
@@ -96,14 +97,15 @@ public class RP2 implements CXPlayer {
         for(int i : L) {
             checktime(); // Check timeout at every iteration
             CXGameState state = B.markColumn(i);
-            eval = evaluateColumns(B, B.getAvailableColumns());
-            if (eval.val > score.val) {
-                score.val = eval.val;
-                score.column = i;
+            tmp = evaluateColumns(B, B.getAvailableColumns());
+            tmp.val = -tmp.val;
+            if (tmp.val > eval.val) {
+                eval.val = tmp.val;
+                eval.column = i;
             }
             B.unmarkColumn();
         }
-        return score;
+        return eval;
     }
 
 	/**
@@ -116,13 +118,8 @@ public class RP2 implements CXPlayer {
 		for(int i : L){
 			checktime(); // Check timeout at every iteration
 			CXGameState state = B.markColumn(i);
-			if (state == myWin) {
-                eval.val = (M*N + 1 - B.numOfMarkedCells());
-                eval.column = i;
-                B.unmarkColumn();
-                return eval;
-            } else if (state == yourWin) {
-                eval.val = (-M*N + 1 + B.numOfMarkedCells());
+			if (state == myWin || state == yourWin) {
+                eval.val = (M*N + 1 - B.numOfMarkedCells())/2;
                 eval.column = i;
                 B.unmarkColumn();
                 return eval;
