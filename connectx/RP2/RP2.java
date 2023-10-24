@@ -134,8 +134,4 @@ public class RP2 implements CXPlayer {
 	public String playerName() {
 		return "Rdy Player 2";
 	}
-
-	public String visited_nodes(){
-		return Integer.toString(nodes);
-	}
 }
