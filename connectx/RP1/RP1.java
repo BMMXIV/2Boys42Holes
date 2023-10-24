@@ -149,6 +149,6 @@ public class RP1 implements CXPlayer {
 	}
 
 	public String playerName() {
-		return "Rdy Player One";
+		return "Rdy Player 1";
 	}
 }

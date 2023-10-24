@@ -1,4 +1,4 @@
-package connectx.RP2;
+package connectx.RP3;
 
 import connectx.CXPlayer;
 import connectx.CXBoard;
@@ -14,7 +14,7 @@ import javax.swing.text.Position;
 /**
  * 
  */
-public class RP2 implements CXPlayer {
+public class RP3 implements CXPlayer {
 	private Random rand;
 	private CXGameState myWin;
 	private CXGameState yourWin;
@@ -30,15 +30,19 @@ public class RP2 implements CXPlayer {
     public class Score {
         public int val;
         public int column;
+        public int alpha;
+        public int beta;
 
         public Score() {
             val = -M*N;
             column = -1;
+            alpha = -((M*N + 1)/2 + 1);
+            beta = (M*N + 1)/2 + 1;
         }
     }
 
 	/* Default empty constructor */
-	public RP2() {
+	public RP3() {
 	}
 
 	public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
@@ -68,7 +72,7 @@ public class RP2 implements CXPlayer {
 
 		try {
 			//score[0] = column to play, score[1] = evaluation
-			score = evaluateColumns(B, L);
+			score = evaluateColumns(B, L, -M*N, M*N);
 			return score.column;
 		} catch (TimeoutException e) {
 			System.err.println("Timeout");
@@ -81,30 +85,49 @@ public class RP2 implements CXPlayer {
 			throw new TimeoutException();
 	}
 
-    private Score evaluateColumns(CXBoard B, Integer[] L) throws TimeoutException {
+    private Score evaluateColumns(CXBoard B, Integer[] L, int alpha, int beta) throws TimeoutException {
         Score eval = new Score();
         Score tmp = new Score();
 		nodes++;
+		//int alpha = -M*N;
+		//int beta = M*N;
 
 		if (B.gameState() == draw) {
             eval.val = 0;
+			eval.alpha = Math.max(eval.val, eval.alpha);
             return eval;
         }
 
         eval = singleMoveWin(B, L);
         if (eval.column != -1) {
+			int temp = eval.alpha;
+			eval.alpha = -eval.beta;
+			eval.beta = -temp;
+			eval.alpha = Math.max(eval.val, eval.alpha);
             return eval;
         }
 
+		//alpha and beta are the opposite of alpha and beta of the other player
+		eval.alpha = -beta;
+		eval.beta = -alpha;
+
         for(int i : L) {
             checktime(); // Check timeout at every iteration
-            CXGameState state = B.markColumn(i);
-            tmp = evaluateColumns(B, B.getAvailableColumns());
+            
+			B.markColumn(i);
+            tmp = evaluateColumns(B, B.getAvailableColumns(), eval.alpha, eval.beta);
+
             tmp.val = -tmp.val;
             if (tmp.val > eval.val) {
                 eval.val = tmp.val;
                 eval.column = i;
             }
+			eval.alpha = Math.max(eval.val, eval.alpha);
+
+			if (eval.alpha >= eval.beta){
+				B.unmarkColumn();
+				break;
+			}
             B.unmarkColumn();
         }
         return eval;
@@ -122,6 +145,7 @@ public class RP2 implements CXPlayer {
 			CXGameState state = B.markColumn(i);
 			if (state == myWin || state == yourWin) {
                 eval.val = (M*N + 1 - B.numOfMarkedCells())/2;
+				eval.alpha = eval.val;
                 eval.column = i;
                 B.unmarkColumn();
                 return eval;
@@ -132,7 +156,7 @@ public class RP2 implements CXPlayer {
 	}
 
 	public String playerName() {
-		return "Rdy Player 2";
+		return "Rdy Player 3";
 	}
 
 	public String visited_nodes(){

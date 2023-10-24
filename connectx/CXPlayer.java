@@ -55,4 +55,6 @@ public interface CXPlayer {
 	 */
 	public String playerName();
 
+	public String visited_nodes();
+
 }

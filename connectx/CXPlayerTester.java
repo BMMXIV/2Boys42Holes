@@ -361,8 +361,8 @@ public class CXPlayerTester {
 		}
 		if (VERBOSE)
 			System.out.println("\n**** FINAL SCORE ****");
-		System.out.println(Player[0].playerName() + " Score: " + P1SCORE + " Won: " + STATP1[0] + " Lost: " + STATP2[0] + " Draw: " + STATP1[1] + " Error: " + STATP1[2]);
-		System.out.println(Player[1].playerName() + " Score: " + P2SCORE + " Won: " + STATP2[0] + " Lost: " + STATP1[0] + " Draw: " + STATP2[1] + " Error: " + STATP2[2]); 
+		System.out.println(Player[0].playerName() + " Score: " + P1SCORE + " Won: " + STATP1[0] + " Lost: " + STATP2[0] + " Draw: " + STATP1[1] + " Error: " + STATP1[2] + " Nodes visited: " + Player[0].visited_nodes());
+		System.out.println(Player[1].playerName() + " Score: " + P2SCORE + " Won: " + STATP2[0] + " Lost: " + STATP1[0] + " Draw: " + STATP2[1] + " Error: " + STATP2[2] + " Nodes visited: " + Player[1].visited_nodes()); 
 		
 		System.exit(0);
 	}
