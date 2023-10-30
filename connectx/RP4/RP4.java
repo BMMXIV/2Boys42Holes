@@ -179,8 +179,9 @@ public class RP4 implements CXPlayer {
 		for (int col = 0; col < N; col++) {
 			int consecutiveChips = 0;
 			CXCellState owner = CXCellState.FREE;
+			CXCellState actCell;
 			for (int row = M-2; row >= 0; row--) {
-				CXCellState actCell = B.cellState(row, col);
+				actCell = B.cellState(row, col);
 				if (owner == CXCellState.FREE) {
 					if (actCell == me || actCell == you) {
 						owner = actCell;
@@ -204,8 +205,19 @@ public class RP4 implements CXPlayer {
 			}
 		}
 
-		//check horizontal lines
-		//TO DO
+		Integer[] horizontalChips;
+
+		//check horizontal lines for me
+		horizontalChips = checkHorizontalLines(B, P);
+		for (int i = 0; i < 3; i++){
+			myConsecChips[i] += horizontalChips[i];
+		}
+
+		//check horizontal lines for you
+		horizontalChips = checkHorizontalLines(B, !P);
+		for (int i = 0; i < 3; i++){
+			yourConsecChips[i] += horizontalChips[i];
+		}
 
 		//check diagonal lines
 		//TO DO
@@ -215,6 +227,55 @@ public class RP4 implements CXPlayer {
 		
 		//make heuristic evaluation comparable to leaf evaluation?
 		return myPoints - yourPoints;
+	}
+
+	private Integer[] checkHorizontalLines(CXBoard B, boolean P){
+		CXCellState me = P ? CXCellState.P1 : CXCellState.P2;
+		CXCellState you = P ? CXCellState.P2 : CXCellState.P1;
+		
+		Integer[] myConsecChips = {0, 0, 0};
+
+		for (int row = M-1; row >= 0; row--){
+			int consecutiveChips = 0;
+			boolean canGrow = false;
+			CXCellState actCell = B.cellState(row, 0);
+			if (actCell == me){
+				consecutiveChips++;
+			}
+			else if (actCell == CXCellState.FREE){
+				canGrow = true;
+			}
+			for (int col = 1; col < N-1; col++){
+				actCell = B.cellState(row, col);
+				if (actCell == me){
+					consecutiveChips++;
+				}
+				else {
+					if (actCell == CXCellState.FREE){
+						canGrow = true;
+					}
+					if (canGrow && consecutiveChips > 0){
+						myConsecChips[consecutiveChips - 1]++;
+					}
+					consecutiveChips = 0;
+					if (actCell == you){
+						canGrow = false;
+					}
+				}
+			}
+			actCell = B.cellState(row, N-1);
+			if (actCell == me){
+				consecutiveChips++;
+			}
+			else if (actCell == CXCellState.FREE){
+				canGrow = true;
+			}
+			if (canGrow && consecutiveChips > 0){
+				myConsecChips[consecutiveChips - 1]++;
+			}
+		}
+
+		return myConsecChips;
 	}
 
 	/**
