@@ -190,44 +190,26 @@ public class RP4 implements CXPlayer {
 			yourConsecChips[i] = 0;
 		}
 
-		//check vertical lines
-		for (int col = 0; col < N; col++) {
-			int consecutiveChips = 0;
-			CXCellState owner = CXCellState.FREE;
-			CXCellState actCell;
-			for (int row = M-2; row >= 0; row--) {
-				actCell = B.cellState(row, col);
-				if (owner == CXCellState.FREE) {
-					if (actCell == me || actCell == you) {
-						owner = actCell;
-						consecutiveChips++;
-					}
-				}
-				else if (owner == actCell) {
-					consecutiveChips++;
-				}
-				else {
-					break;
-				}
-			}
-			if (consecutiveChips != 0){
-				if (owner == me){
-					myConsecChips[consecutiveChips - 1]++;
-				}
-				else{
-					yourConsecChips[consecutiveChips - 1]++;
-				}
-			}
+		Integer[] verticalChips = new Integer[K-1];
+		
+		//check vertical lines for me
+		verticalChips = checkVerticalLines(B, P);
+		for (int i = 0; i < 3; i++){
+			myConsecChips[i] += verticalChips[i];
+		}
+		//check vertical lines for you
+		verticalChips = checkVerticalLines(B, !P);
+		for (int i = 0; i < 3; i++){
+			yourConsecChips[i] += verticalChips[i];
 		}
 
-		Integer[] horizontalChips;
+		Integer[] horizontalChips = new Integer[K-1];
 
 		//check horizontal lines for me
 		horizontalChips = checkHorizontalLines(B, P);
 		for (int i = 0; i < 3; i++){
 			myConsecChips[i] += horizontalChips[i];
 		}
-
 		//check horizontal lines for you
 		horizontalChips = checkHorizontalLines(B, !P);
 		for (int i = 0; i < 3; i++){
@@ -248,11 +230,43 @@ public class RP4 implements CXPlayer {
 		return myPoints - yourPoints;
 	}
 
+	private Integer[] checkVerticalLines(CXBoard B, boolean P){
+		CXCellState me = P ? CXCellState.P1 : CXCellState.P2;
+		CXCellState you = P ? CXCellState.P2 : CXCellState.P1;
+
+		Integer[] myConsecChips = new Integer[K-1];
+		for (int i = 0; i < K-1; i++){
+			myConsecChips[i] = 0;
+		}
+
+		for (int col = 0; col < N; col++) {
+			int consecutiveChips = 0;
+			CXCellState actCell;
+			for (int row = M-1; row >= 0; row--) {
+				actCell = B.cellState(row, col);
+				if (actCell == me) {
+					consecutiveChips++;
+				}
+				else if (actCell == you) {
+					break;
+				}
+			}
+			if (consecutiveChips != 0){
+				myConsecChips[consecutiveChips - 1]++;
+			}
+		}
+
+		return myConsecChips;
+	}
+
 	private Integer[] checkHorizontalLines(CXBoard B, boolean P){
 		CXCellState me = P ? CXCellState.P1 : CXCellState.P2;
 		CXCellState you = P ? CXCellState.P2 : CXCellState.P1;
 		
-		Integer[] myConsecChips = {0, 0, 0};
+		Integer[] myConsecChips = new Integer[K-1];
+		for (int i = 0; i < K-1; i++){
+			myConsecChips[i] = 0;
+		}
 
 		for (int row = M-1; row >= 0; row--){
 			int consecutiveChips = 0;
