@@ -27,10 +27,9 @@ public class RP4 implements CXPlayer {
 	private long START;
 	private int M;
 	private int N;
+	private int K;
 	private int nodes;
-	private double oneChipWeight;
-	private double twoChipWeight;
-	private double threeChipWeight;
+	private double[] chipWeights;
 	private int maxDepth;
 	private boolean P1;
 
@@ -62,11 +61,23 @@ public class RP4 implements CXPlayer {
 		TIMEOUT = timeout_in_secs;
 		this.M = M;
 		this.N = N;
-		oneChipWeight = 0.1;
-		twoChipWeight = 0.3;
-		threeChipWeight = 0.9;
+		this.K = K;
+		initChipWeights();
 		maxDepth = 10;
 		P1 = first;
+	}
+
+	/**
+	 * Calculate weights with exponential growth
+	 * 
+	 * Divide them by 2^(K-2) that is the last and biggest one
+	 * to normalize them in the range [0, 1]
+	 */
+	private void initChipWeights(){
+		chipWeights = new double[K-1];
+		for (int i = 0; i < K-1; i++){
+			chipWeights[i] = Math.pow(2, i)/Math.pow(2, K-2);
+		}
 	}
 
 	/**
@@ -172,8 +183,12 @@ public class RP4 implements CXPlayer {
 		CXCellState me = P ? CXCellState.P1 : CXCellState.P2;
 		CXCellState you = P ? CXCellState.P2 : CXCellState.P1;
 		//number of 1, 2, and 3 consecutive chips
-		Integer[] myConsecChips = {0, 0, 0};
-		Integer[] yourConsecChips = {0, 0, 0};
+		Integer[] myConsecChips = new Integer[K-1];
+		Integer[] yourConsecChips = new Integer[K-1];
+		for (int i = 0; i < K-1; i++){
+			myConsecChips[i] = 0;
+			yourConsecChips[i] = 0;
+		}
 
 		//check vertical lines
 		for (int col = 0; col < N; col++) {
@@ -222,8 +237,12 @@ public class RP4 implements CXPlayer {
 		//check diagonal lines
 		//TO DO
 
-		double myPoints = myConsecChips[0]*oneChipWeight + myConsecChips[1]*twoChipWeight + myConsecChips[2]*threeChipWeight;
-		double yourPoints = yourConsecChips[0]*oneChipWeight + yourConsecChips[1]*twoChipWeight + yourConsecChips[2]*threeChipWeight;
+		double myPoints = 0;
+		double yourPoints = 0;
+		for (int i = 0; i < K-1; i++){
+			myPoints += myConsecChips[i] * chipWeights[i];
+			yourPoints += yourConsecChips[i] * chipWeights[i];
+		}
 		
 		//make heuristic evaluation comparable to leaf evaluation?
 		return myPoints - yourPoints;
