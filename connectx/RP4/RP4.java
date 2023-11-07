@@ -28,6 +28,7 @@ public class RP4 implements CXPlayer {
 	private int M;
 	private int N;
 	private int K;
+	private int prune;
 	private int nodes;
 	private double[] chipWeights;
 	private int maxDepth;
@@ -65,6 +66,7 @@ public class RP4 implements CXPlayer {
 		initChipWeights();
 		maxDepth = 10;
 		P1 = first;
+		prune = 0;
 	}
 
 	/**
@@ -97,7 +99,7 @@ public class RP4 implements CXPlayer {
 			score = evaluateColumns(B, L, -M*N, M*N, maxDepth, P1);
 			return score.column;
 		} catch (TimeoutException e) {
-			System.err.println("Timeout");
+			System.err.println("Timeout RP4");
 			return score.column;
 		}
 	}
@@ -135,7 +137,7 @@ public class RP4 implements CXPlayer {
             return eval;
         }
 
-		if (depth == 0) {
+		if (depth > 0) {
 			//alpha and beta are the opposite of alpha and beta of the other player
 			eval.alpha = -beta;
 			eval.beta = -alpha;
@@ -160,6 +162,7 @@ public class RP4 implements CXPlayer {
 				eval.alpha = Math.max(eval.val, eval.alpha);
 
 				if (eval.alpha >= eval.beta){
+					prune++;
 					B.unmarkColumn();
 					break;
 				}
@@ -334,6 +337,6 @@ public class RP4 implements CXPlayer {
 	}
 
 	public String playerName() {
-		return "Visited Nodes: " + Integer.toString(nodes) +" Rdy Player 4";
+		return Integer.toString(prune) + " Visited Nodes: " + Integer.toString(nodes) +" Rdy Player 4";
 	}
 }
