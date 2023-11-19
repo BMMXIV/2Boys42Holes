@@ -35,10 +35,10 @@ public class RP5 implements CXPlayer {
 	private boolean P1;
 
     public class Score {
-        public int val;
+        public double val;
         public int column;
-        public int alpha;
-        public int beta;
+        public double alpha;
+        public double beta;
 
         public Score() {
             val = -M*N;
@@ -108,7 +108,7 @@ public class RP5 implements CXPlayer {
 			throw new TimeoutException();
 	}
 
-    private Score evaluateColumns(CXBoard B, Integer[] L, int alpha, int beta, int depth, boolean P) throws TimeoutException {
+    private Score evaluateColumns(CXBoard B, Integer[] L, double alpha, double beta, int depth, boolean P) throws TimeoutException {
         Score eval = new Score();
         Score tmp = new Score();
 		nodes++;
@@ -129,7 +129,7 @@ public class RP5 implements CXPlayer {
 		//check if there's a move to win immediately
         eval = singleMoveWin(B, L);
         if (eval.column != -1) {
-			int temp = eval.alpha;
+			double temp = eval.alpha;
 			eval.alpha = -eval.beta;
 			eval.beta = -temp;
 			eval.alpha = Math.max(eval.val, eval.alpha);
@@ -169,7 +169,8 @@ public class RP5 implements CXPlayer {
 			}
 		}
 		else {
-			eval.val = (int)Math.round(heuristicEval(B, P));
+			eval.val = heuristicEval(B, P);
+			//eval.val = (int)Math.round(heuristicEval(B, P));
 		}
 		
         return eval;
@@ -218,8 +219,18 @@ public class RP5 implements CXPlayer {
 			yourConsecChips[i] += horizontalChips[i];
 		}
 
-		//check diagonal lines
-		//TO DO
+		Integer[] diagonalChips = new Integer[K-1];
+
+		//check diagonal lines for me
+		diagonalChips = checkDiagonalLines(B, P);
+		for (int i = 0; i < K-1; i++){
+			myConsecChips[i] += diagonalChips[i];
+		}
+		//check diagonal lines for you
+		diagonalChips = checkDiagonalLines(B, !P);
+		for (int i = 0; i < K-1; i++){
+			yourConsecChips[i] += diagonalChips[i];
+		}
 
 		double myPoints = 0;
 		double yourPoints = 0;
@@ -301,6 +312,210 @@ public class RP5 implements CXPlayer {
 				}
 			}
 			actCell = B.cellState(row, N-1);
+			if (actCell == me){
+				consecutiveChips++;
+			}
+			else if (actCell == CXCellState.FREE){
+				canGrow = true;
+			}
+			if (canGrow && consecutiveChips > 0){
+				myConsecChips[consecutiveChips - 1]++;
+			}
+		}
+
+		return myConsecChips;
+	}
+
+	private Integer[] checkDiagonalLines(CXBoard B, boolean P){
+		CXCellState me = P ? CXCellState.P1 : CXCellState.P2;
+		CXCellState you = P ? CXCellState.P2 : CXCellState.P1;
+		
+		Integer[] myConsecChips = new Integer[K-1];
+		for (int i = 0; i < K-1; i++){
+			myConsecChips[i] = 0;
+		}
+
+		/*
+		 * starting from the left column and going right upwards
+		 */
+		for (int row = M-2; row >= 1; row--){
+			int col = 0;
+			int consecutiveChips = 0;
+			boolean canGrow = false;
+			CXCellState actCell = B.cellState(row, col);
+			if (actCell == me){
+				consecutiveChips++;
+			}
+			else if (actCell == CXCellState.FREE){
+				canGrow = true;
+			}
+			col++;
+			int row_inner = row + 1;
+			while (col < N-1 && row_inner < M-1){
+				actCell = B.cellState(row_inner, col);
+				if (actCell == me){
+					consecutiveChips++;
+				}
+				else {
+					if (actCell == CXCellState.FREE){
+						canGrow = true;
+					}
+					if (canGrow && consecutiveChips > 0){
+						myConsecChips[consecutiveChips - 1]++;
+					}
+					consecutiveChips = 0;
+					if (actCell == you){
+						canGrow = false;
+					}
+				}
+				col++;
+				row_inner++;
+			}
+			actCell = B.cellState(row_inner, col);
+			if (actCell == me){
+				consecutiveChips++;
+			}
+			else if (actCell == CXCellState.FREE){
+				canGrow = true;
+			}
+			if (canGrow && consecutiveChips > 0){
+				myConsecChips[consecutiveChips - 1]++;
+			}
+		}
+
+		/*
+		 * starting from the bottom row and going right upwards
+		 */
+		for (int col = 0; col < N-1; col++){
+			int row = 0;
+			int consecutiveChips = 0;
+			boolean canGrow = false;
+			CXCellState actCell = B.cellState(row, col);
+			if (actCell == me){
+				consecutiveChips++;
+			}
+			else if (actCell == CXCellState.FREE){
+				canGrow = true;
+			}
+			row++;
+			int col_inner = col + 1;
+			while (col_inner < N-1 && row < M-1){
+				actCell = B.cellState(row, col_inner);
+				if (actCell == me){
+					consecutiveChips++;
+				}
+				else {
+					if (actCell == CXCellState.FREE){
+						canGrow = true;
+					}
+					if (canGrow && consecutiveChips > 0){
+						myConsecChips[consecutiveChips - 1]++;
+					}
+					consecutiveChips = 0;
+					if (actCell == you){
+						canGrow = false;
+					}
+				}
+				col_inner++;
+				row++;
+			}
+			actCell = B.cellState(row, col_inner);
+			if (actCell == me){
+				consecutiveChips++;
+			}
+			else if (actCell == CXCellState.FREE){
+				canGrow = true;
+			}
+			if (canGrow && consecutiveChips > 0){
+				myConsecChips[consecutiveChips - 1]++;
+			}
+		}
+
+		/*
+		 * starting from the right column and going left upwards
+		 */
+		for (int row = M-2; row >= 1; row--){
+			int col = N-1;
+			int consecutiveChips = 0;
+			boolean canGrow = false;
+			CXCellState actCell = B.cellState(row, col);
+			if (actCell == me){
+				consecutiveChips++;
+			}
+			else if (actCell == CXCellState.FREE){
+				canGrow = true;
+			}
+			col--;
+			int row_inner = row + 1;
+			while (col > 0 && row_inner < M-1){
+				actCell = B.cellState(row_inner, col);
+				if (actCell == me){
+					consecutiveChips++;
+				}
+				else {
+					if (actCell == CXCellState.FREE){
+						canGrow = true;
+					}
+					if (canGrow && consecutiveChips > 0){
+						myConsecChips[consecutiveChips - 1]++;
+					}
+					consecutiveChips = 0;
+					if (actCell == you){
+						canGrow = false;
+					}
+				}
+				col--;
+				row_inner++;
+			}
+			actCell = B.cellState(row_inner, col);
+			if (actCell == me){
+				consecutiveChips++;
+			}
+			else if (actCell == CXCellState.FREE){
+				canGrow = true;
+			}
+			if (canGrow && consecutiveChips > 0){
+				myConsecChips[consecutiveChips - 1]++;
+			}
+		}
+
+		/*
+		 * starting from the bottom row and going left upwards
+		 */
+		for (int col = N-1; col > 0; col--){
+			int row = 0;
+			int consecutiveChips = 0;
+			boolean canGrow = false;
+			CXCellState actCell = B.cellState(row, col);
+			if (actCell == me){
+				consecutiveChips++;
+			}
+			else if (actCell == CXCellState.FREE){
+				canGrow = true;
+			}
+			row++;
+			int col_inner = col - 1;
+			while (col_inner > 0 && row < M-1){
+				actCell = B.cellState(row, col_inner);
+				if (actCell == me){
+					consecutiveChips++;
+				}
+				else {
+					if (actCell == CXCellState.FREE){
+						canGrow = true;
+					}
+					if (canGrow && consecutiveChips > 0){
+						myConsecChips[consecutiveChips - 1]++;
+					}
+					consecutiveChips = 0;
+					if (actCell == you){
+						canGrow = false;
+					}
+				}
+				col_inner--;
+				row++;
+			}
+			actCell = B.cellState(row, col_inner);
 			if (actCell == me){
 				consecutiveChips++;
 			}
