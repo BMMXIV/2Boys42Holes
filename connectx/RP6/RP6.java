@@ -31,7 +31,6 @@ public class RP6 implements CXPlayer {
 	private int nodes;
 	private int prune;
 	private double[] chipWeights;
-	private int maxDepth;
 	private boolean P1;
 
     public class Score {
@@ -39,12 +38,14 @@ public class RP6 implements CXPlayer {
         public int column;
         public double alpha;
         public double beta;
+		public boolean completeVisit;
 
         public Score() {
             val = -M*N;
             column = -1;
             alpha = -((M*N + 1)/2 + 1);
             beta = (M*N + 1)/2 + 1;
+			completeVisit = true;
         }
     }
 
@@ -64,7 +65,6 @@ public class RP6 implements CXPlayer {
 		this.N = N;
 		this.K = K;
 		initChipWeights();
-		maxDepth = 10;
 		P1 = first;
 	}
 
@@ -95,10 +95,10 @@ public class RP6 implements CXPlayer {
 		score.column = L[rand.nextInt(L.length)]; // Save a random column
 
 		try {
-			score = evaluateColumnsIterative(B, L, -M*N, M*N, maxDepth, P1);
+			score = evaluateColumnsIterative(B, L, -M*N, M*N, P1);
 			return score.column;
 		} catch (TimeoutException e) {
-			System.err.println("Timeout RP6");
+			System.err.println("Timeout RP6, selecting random column");
 			return score.column;
 		}
 	}
@@ -112,7 +112,7 @@ public class RP6 implements CXPlayer {
 		return (System.currentTimeMillis() - START) / 1000.0 >= TIMEOUT * (99.0 / 100.0);
 	}
 
-	private Score evaluateColumnsIterative(CXBoard B, Integer[] L, double alpha, double beta, int depth, boolean P) throws TimeoutException {
+	private Score evaluateColumnsIterative(CXBoard B, Integer[] L, double alpha, double beta, boolean P) throws TimeoutException {
 		Score evaluated = new Score();
         Score evaluating = new Score();
         Score save = new Score();
@@ -121,11 +121,16 @@ public class RP6 implements CXPlayer {
         int d = 1;
 		while (true) {
             try {
+                System.err.println(d + "\n");
 			    evaluating = evaluateColumns(B, L, alpha, beta, d, P);
             } catch (TimeoutException e) {
                 System.err.println("Timeout RP6");
                 System.err.println("Time used: " + ((System.currentTimeMillis() - START) / 1000.0));
                 System.err.println("Depth: " + d);
+
+				if (evaluated.column == -1 && evaluating.column != -1){
+					evaluated = evaluating;
+				}
 
                 if (evaluated.column != -1){
                     System.err.println("Return last evaluation: " + evaluated.column);
@@ -140,14 +145,18 @@ public class RP6 implements CXPlayer {
             }
             
             evaluated = evaluating;
+			if (evaluated.completeVisit){	//already visited the whole tree with depth d, we can stop
+				break;
+			}
             d++;
 		}
 
-        /*
-        System.err.println("Got to the return outside the while cicle");
-        System.err.println("Return random move: " + save.column);
-        return save;    //it shouldn't get here, but gave error if there wasn't a return
-        */
+		System.err.println("Complete visit RP6");
+		System.err.println("Time used: " + ((System.currentTimeMillis() - START) / 1000.0));
+		System.err.println("Depth: " + d);
+		System.err.println("Return last evaluation: " + evaluated.column);
+		System.err.println();
+		return evaluated;
 	}
 
     private Score evaluateColumns(CXBoard B, Integer[] L, double alpha, double beta, int depth, boolean P) throws TimeoutException {
@@ -195,6 +204,10 @@ public class RP6 implements CXPlayer {
 				B.markColumn(i);
 				tmp = evaluateColumns(B, B.getAvailableColumns(), eval.alpha, eval.beta, depth-1, !P);
 
+				if (!tmp.completeVisit){		//not the whole tree was visited
+					eval.completeVisit = false;
+				}
+
 				tmp.val = -tmp.val;		//score is the opposite of the score of the other player
 				if (tmp.val > eval.val) {
 					eval.val = tmp.val;
@@ -211,6 +224,7 @@ public class RP6 implements CXPlayer {
 			}
 		}
 		else {
+			eval.completeVisit = false;
 			eval.val = heuristicEval(B, P);
 			//eval.val = (int)Math.round(heuristicEval(B, P));
 		}
