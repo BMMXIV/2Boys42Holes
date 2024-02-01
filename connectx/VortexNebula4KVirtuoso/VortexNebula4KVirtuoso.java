@@ -1,4 +1,4 @@
-package connectx.StoKfish;
+package connectx.VortexNebula4KVirtuoso;
 
 import connectx.CXPlayer;
 import connectx.CXBoard;
@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * 
  */
-public class StoKfish implements CXPlayer {
+public class VortexNebula4KVirtuoso implements CXPlayer {
 	private Random rand;
 	private CXGameState myWin;
 	private CXGameState yourWin;
@@ -42,7 +42,7 @@ public class StoKfish implements CXPlayer {
     }
 
 	/* Default empty constructor */
-	public StoKfish() {
+	public VortexNebula4KVirtuoso() {
 	}
 
 	public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
@@ -574,6 +574,6 @@ public class StoKfish implements CXPlayer {
 	}
 
 	public String playerName() {
-		return "StoKfish";
+		return "VortexNebula4KVirtuoso";
 	}
 }
